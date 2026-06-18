@@ -45,16 +45,19 @@ You need [Node.js](https://nodejs.org/) installed to run the local Vite web serv
 ### Installation & Run
 
 1. Navigate to the project root directory:
+
    ```bash
    cd "d:/Git/Web Sides/Autonomous vehicles"
    ```
 
 2. Install the lightweight development dependency:
+
    ```bash
    npm install
    ```
 
 3. Spin up the local dev server:
+
    ```bash
    npm run dev
    ```
