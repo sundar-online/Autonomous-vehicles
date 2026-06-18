@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Autonomous Vehicle Decision-Making Simulator</title>
+    <meta name="description" content="An interactive real-time decision-making simulator for autonomous vehicles. Train a neural network using genetic algorithms directly in your browser.">
+    <link rel="stylesheet" href="style.css">
+    <!-- FontAwesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+
+    <header>
+        <div class="logo">
+            <i class="fas fa-car-side"></i>
+            <span>AUTO-PILOT AI</span>
+        </div>
+        <div class="header-tag" id="statusTag">Real-Time ML Simulation</div>
+    </header>
+
+    <main class="dashboard">
+        
+        <!-- COLUMN 1: CONTROLS & ENVIRONMENT -->
+        <aside class="card controls-col">
+            <h2 class="card-title">
+                <i class="fas fa-sliders-h"></i> Control Dashboard
+            </h2>
+
+            <div class="btn-group">
+                <button id="btnTrainMode" class="mode-btn active">
+                    <i class="fas fa-graduation-cap"></i> AI Training Cohort
+                </button>
+                <button id="btnManualMode" class="mode-btn">
+                    <i class="fas fa-keyboard"></i> Manual Keyboard Drive
+                </button>
+                <button id="btnPretrainedMode" class="mode-btn">
+                    <i class="fas fa-robot"></i> Pretrained Autopilot
+                </button>
+            </div>
+
+            <div class="play-btn-group">
+                <button id="btnPlayPause" class="btn-primary">
+                    <i class="fas fa-pause"></i> Pause
+                </button>
+                <button id="btnReset" class="btn-secondary">
+                    <i class="fas fa-redo"></i> Reset
+                </button>
+            </div>
+
+            <!-- Parameters specific to training -->
+            <div id="trainingParams">
+                <div class="slider-group">
+                    <div class="slider-header">
+                        <span>Mutation Strength</span>
+                        <span id="lblMutation">15%</span>
+                    </div>
+                    <input type="range" id="mutationSlider" min="0.01" max="0.5" step="0.01" value="0.15">
+                </div>
+
+                <div class="slider-group">
+                    <div class="slider-header">
+                        <span>Cohort Size</span>
+                        <span id="lblCohort">100</span>
+                    </div>
+                    <input type="range" id="cohortSlider" min="10" max="250" step="10" value="100">
+                </div>
+
+                <div class="btn-group" style="margin-bottom: 1.25rem;">
+                    <div class="brain-save-group">
+                        <button id="btnSaveBrain" class="btn-primary" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); border-color: rgba(16,185,129,0.3);">
+                            <i class="fas fa-save"></i> Save Brain
+                        </button>
+                        <button id="btnDiscardBrain" class="btn-secondary">
+                            <i class="fas fa-trash"></i> Discard
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Global Parameters -->
+            <div class="slider-group">
+                <div class="slider-header">
+                    <span>Simulation Speed</span>
+                    <span id="lblSpeed">1x</span>
+                </div>
+                <input type="range" id="speedSlider" min="1" max="4" step="1" value="1">
+            </div>
+
+            <h2 class="card-title" style="margin-top: 0.5rem; margin-bottom: 1rem;">
+                <i class="fas fa-cloud-showers-heavy"></i> Weather Engine
+            </h2>
+
+            <div class="slider-group">
+                <div class="slider-header">
+                    <span>Rain (Friction Loss)</span>
+                    <span id="lblRain">0%</span>
+                </div>
+                <input type="range" id="rainSlider" min="0" max="1" step="0.05" value="0">
+            </div>
+
+            <div class="slider-group">
+                <div class="slider-header">
+                    <span>Fog (Sensor Range)</span>
+                    <span id="lblFog">0%</span>
+                </div>
+                <input type="range" id="fogSlider" min="0" max="1" step="0.05" value="0">
+            </div>
+
+            <button id="btnToggleNight" class="btn-toggle-switch">
+                <i class="fas fa-sun"></i> Night Mode: OFF
+            </button>
+
+            <!-- Guide Panel -->
+            <div class="guide-list">
+                <p>INTERACTION GUIDE</p>
+                <ul>
+                    <li><i class="fas fa-mouse-pointer"></i> Click on road to spawn traffic.</li>
+                    <li><i class="fas fa-keyboard"></i> Shift + Click to spawn barricades.</li>
+                    <li><i class="fas fa-arrow-up"></i> Use W/A/S/D or Arrows to drive manually.</li>
+                </ul>
+            </div>
+        </aside>
+
+        <!-- COLUMN 2: ROAD CANVAS SIMULATOR -->
+        <section class="card simulation-col">
+            <div class="canvas-container">
+                <canvas id="roadCanvas"></canvas>
+                <div class="canvas-overlay-tip">Click road to spawn traffic | Shift+Click for static hazards</div>
+            </div>
+        </section>
+
+        <!-- COLUMN 3: NEURAL NET VISUALIZER & PERFORMANCE -->
+        <aside class="card visualizer-col">
+            <h2 class="card-title" style="margin-bottom: 0.5rem;">
+                <i class="fas fa-brain"></i> Neural Network Activation
+            </h2>
+            <div class="visualizer-canvas-container">
+                <canvas id="networkCanvas"></canvas>
+            </div>
+
+            <h2 class="card-title" style="margin-bottom: 0.75rem; border-top: 1px solid rgba(255, 255, 255, 0.05); padding-top: 0.75rem;">
+                <i class="fas fa-tachometer-alt"></i> Telemetry HUD
+            </h2>
+            
+            <div class="hud-grid">
+                <div class="hud-item">
+                    <span class="hud-label">Gen / Epoch</span>
+                    <span class="hud-value" id="lblGen">1</span>
+                </div>
+                <div class="hud-item">
+                    <span class="hud-label">Active / Cohort</span>
+                    <span class="hud-value val-normal" id="lblActiveCount">0 / 0</span>
+                </div>
+                <div class="hud-item">
+                    <span class="hud-label">Best Speed</span>
+                    <span class="hud-value" id="lblSpeedStat">0 km/h</span>
+                </div>
+                <div class="hud-item">
+                    <span class="hud-label">Distance Driven</span>
+                    <span class="hud-value" id="lblDistanceStat">0 m</span>
+                </div>
+            </div>
+
+            <div class="hud-item" style="flex-direction: row; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                <span class="hud-label" style="margin: 0;">System Status:</span>
+                <span class="hud-value" id="lblStatusStat" style="font-size: 0.95rem;">CRUISING</span>
+            </div>
+
+            <h2 class="card-title" style="margin-bottom: 0.5rem; border-top: 1px solid rgba(255, 255, 255, 0.05); padding-top: 0.75rem;">
+                <i class="fas fa-chart-line"></i> Evolution Progress
+            </h2>
+            <div class="analytics-container">
+                <canvas id="analyticsCanvas"></canvas>
+            </div>
+        </aside>
+
+    </main>
+
+    <!-- Floating Toast Notifications -->
+    <div id="notificationContainer"></div>
+
+    <!-- Simulation bootstrap script -->
+    <script type="module">
+        import { Simulation } from "./src/simulation.js";
+        
+        // Wait for page resources to load
+        window.addEventListener("load", () => {
+            window.simulation = new Simulation();
+        });
+    </script>
+</body>
+</html>
